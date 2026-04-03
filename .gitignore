@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+venv_gpu/
+env/
+.pytest_cache/
+
+# Datasets and Video Storage
+data/
+cache/
+logs/
+logs_old/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.png
+
+# Machine Learning Checkpoints
+*.pt
+*.pth
+*.npy
+*.weight
+
+# IDE and System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+surveillance_camera_app.zip
