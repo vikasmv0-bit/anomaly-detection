@@ -14,6 +14,7 @@ import uuid
 import threading
 import cv2
 import numpy as np
+import torch
 
 # Ensure project root is in path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -56,6 +57,7 @@ def _init_detector():
             iou=cfg.DETECTION_IOU,
             allowed_classes=cfg.ALLOWED_CLASSES,
             threat_classes=cfg.THREAT_CLASSES,
+            device="cuda" if torch.cuda.is_available() else "cpu",
         )
         logger.info("YOLOv8 detector initialized.")
     except Exception as e:
@@ -144,7 +146,8 @@ class StreamSession:
             self.video_stream.start()
 
             # Initialize Extractor with fixed width and height since VideoStream resizes
-            self.extractor = FeatureExtractor(config=cfg, frame_width=640, frame_height=480)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.extractor = FeatureExtractor(config=cfg, frame_width=640, frame_height=480, device=device)
 
             while self.active:
                 ret, frame = self.video_stream.read()
@@ -180,7 +183,8 @@ class StreamSession:
             self.upload_state["total_frames"] = self.video_stream.total_frames
             
             # Initialize Extractor with original video dimensions
-            self.extractor = FeatureExtractor(config=cfg, frame_width=self.video_stream.width, frame_height=self.video_stream.height)
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.extractor = FeatureExtractor(config=cfg, frame_width=self.video_stream.width, frame_height=self.video_stream.height, device=device)
 
             out_filename = f"annotated_{self.filename}"
             if out_filename.endswith(".avi") == False:

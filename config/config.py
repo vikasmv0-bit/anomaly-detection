@@ -21,7 +21,7 @@ class Config:
     # -----------------------------------------------------------------------
     # YOLOv8 Object Detection
     # -----------------------------------------------------------------------
-    YOLO_MODEL          = "yolov8n.pt"   # Nano model; swap for yolov8s/m/l/x
+    YOLO_MODEL          = "yolov8s.pt"   # Upgraded to Small model for better bounding boxes
     DETECTION_CONF      = 0.20           # Lower for grainy/low-res surveillance cameras
     DETECTION_IOU       = 0.45           # NMS IoU threshold
     # COCO class IDs to keep:
@@ -98,7 +98,7 @@ class Config:
     # Dataset Paths  (update these before training)
     # -----------------------------------------------------------------------
     DATA_DIR        = os.path.join(BASE_DIR, "data")
-    UCSD_ROOT       = os.path.join(DATA_DIR, "UCSD_Anomaly_Dataset")
+    UCSD_ROOT       = os.path.join(DATA_DIR, "UCSD_Anomaly_Dataset", "UCSD_Anomaly_Dataset.v1p2")
     UCF_ROOT        = os.path.join(DATA_DIR, "ucf crime data")
     AVENUE_ROOT     = os.path.join(DATA_DIR, "Avenue")
     CACHE_DIR       = os.path.join(DATA_DIR, "feature_cache")

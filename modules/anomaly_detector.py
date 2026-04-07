@@ -35,6 +35,7 @@ class AnomalyDetector:
         self.cfg     = config
         self.device  = torch.device(device)
         self._buffer = collections.deque(maxlen=config.SEQUENCE_LENGTH)
+        self._score_history = collections.deque(maxlen=5) # Smooth over 5 frames
         self._score  = 0.0
         self._dummy  = (weights_path == "dummy")
 
@@ -90,13 +91,17 @@ class AnomalyDetector:
         seq_t = torch.tensor(seq, dtype=torch.float32).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
-            prob = self.model(seq_t).item()
+            raw_prob = self.model(seq_t).item()
+
+        # Smooth score using moving average to prevent 1-frame false positive spikes
+        self._score_history.append(raw_prob)
+        prob = sum(self._score_history) / len(self._score_history)
 
         self._score = prob
         self._frame_scores.append({"frame": self._frame_count, "score": prob})
 
         is_anomaly = prob >= self.cfg.ANOMALY_THRESHOLD
-
+        
         # Generate description
         description = self._generate_description(is_anomaly, prob, tracks, detections)
 
@@ -171,17 +176,17 @@ class AnomalyDetector:
 
             # Accident: vehicles involved in collision or fast vehicle anomaly
             if (num_vehicles > 0 and (overlapping_vehicle_vehicle or overlapping_vehicle_person)) or \
-               (num_vehicles > 0 and fast_vehicles > 0 and score > 0.5):
+               (num_vehicles > 0 and score > 0.60):
                 is_accident = True
 
-            # Fighting: persons present + fast movement (lowered threshold for untrained model)
-            if num_persons >= 2 and (overlapping_persons or fast_persons >= 1) and score > 0.35:
+            # Fighting: persons present + high anomaly probability (speed can be unreliable at different resolutions)
+            if num_persons >= 2 and score > 0.65:
                 is_fighting = True
-            elif num_persons >= 1 and fast_persons >= 1 and score > 0.45:
+            elif num_persons >= 1 and score > 0.75:
                 is_fighting = True
 
-            # Theft: person + accessory
-            if num_persons >= 1 and num_accessories >= 1 and score > 0.35:
+            # Theft: person + accessory + anomaly
+            if num_persons >= 1 and num_accessories >= 1 and score > 0.60:
                 is_theft = True
 
         # Check for YOLO threats (Weapons/Knives/etc)
