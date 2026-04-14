@@ -80,10 +80,10 @@
                         Upload Pre-recorded Video
                     </label>
                     <div class="source-input-row">
-                        <input type="file" id="file-input" accept=".mp4,.avi,.mov,.mkv,.wmv"
+                        <input type="file" id="file-input" accept=".mp4,.avi,.mov,.mkv,.wmv" multiple
                                style="display:none" onchange="handleFileSelect(event)">
                         <div class="upload-drop-target" id="upload-drop-target" onclick="document.getElementById('file-input').click()">
-                            <span id="upload-zone-text">Drag & drop or click to browse (MP4, AVI, MOV, MKV, WMV — max 500 MB)</span>
+                            <span id="upload-zone-text">Drag & drop or click to test multiple videos (MP4, AVI, MOV, MKV, WMV)</span>
                         </div>
                         <span id="upload-status-text" style="font-size:0.8rem; color:#94a3b8; white-space:nowrap;"></span>
                     </div>

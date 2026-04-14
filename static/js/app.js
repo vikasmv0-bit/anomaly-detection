@@ -486,8 +486,10 @@ function stopStream(streamId) {
 
 // ── File Upload ──────────────────────────────────────────────────────────
 function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) uploadFile(file);
+    const files = e.target.files;
+    for (let i = 0; i < files.length; i++) {
+        uploadFile(files[i]);
+    }
     e.target.value = "";
 }
 
@@ -507,7 +509,7 @@ function uploadFile(file) {
                 if (status) { status.style.color = "#ef4444"; status.textContent = data.error; }
             } else {
                 if (status) { status.style.color = "#06d6a0"; status.textContent = "Uploaded!"; }
-                if (zoneText) zoneText.textContent = "Drag & drop or click to browse (MP4, AVI, MOV, MKV, WMV — max 500 MB)";
+                if (zoneText) zoneText.textContent = "Drag & drop or click to test multiple videos (MP4, AVI, MOV, MKV, WMV)";
                 setTimeout(() => { if (status) status.textContent = ""; }, 4000);
             }
         })
@@ -526,7 +528,11 @@ function setupDragDrop() {
     target.addEventListener("drop",      (e) => {
         e.preventDefault();
         target.classList.remove("drag-over");
-        if (e.dataTransfer.files.length > 0) uploadFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files.length > 0) {
+            for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                uploadFile(e.dataTransfer.files[i]);
+            }
+        }
     });
 
     // Allow dropping anywhere on the body (as fallback)
@@ -535,9 +541,11 @@ function setupDragDrop() {
         e.preventDefault();
         if (e.target === target || target.contains(e.target)) return;
         if (e.dataTransfer.files.length > 0) {
-            const f = e.dataTransfer.files[0];
-            const ext = f.name.split(".").pop().toLowerCase();
-            if (["mp4","avi","mov","mkv","wmv"].includes(ext)) uploadFile(f);
+            for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                const f = e.dataTransfer.files[i];
+                const ext = f.name.split(".").pop().toLowerCase();
+                if (["mp4","avi","mov","mkv","wmv"].includes(ext)) uploadFile(f);
+            }
         }
     });
 }

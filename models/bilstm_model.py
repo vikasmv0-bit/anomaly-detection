@@ -75,6 +75,7 @@ class BiLSTMClassifier(nn.Module):
         Returns:
             Tensor of shape (batch, 1) – anomaly probability in [0, 1].
         """
+        x = self._augment_input(x)
         out, _ = self.bilstm(x)            # (B, T, H*2)
         out = out[:, -1, :]                # (B, H*2) – last time-step
         out = self.layer_norm(out)
@@ -94,6 +95,7 @@ class BiLSTMClassifier(nn.Module):
         Returns:
             Tensor of shape (batch, 1) – raw logits.
         """
+        x = self._augment_input(x)
         out, _ = self.bilstm(x)         # (B, T, H*2)
         out = out[:, -1, :]             # (B, H*2)
         out = self.layer_norm(out)
@@ -111,6 +113,28 @@ class BiLSTMClassifier(nn.Module):
                 nn.init.zeros_(p)
             elif "fc" in name and "weight" in name:
                 nn.init.xavier_uniform_(p)
+
+    def _augment_input(self, x: torch.Tensor) -> torch.Tensor:
+        """Applies spatial feature masking and Gaussian noise during training."""
+        if not self.training:
+            return x
+
+        # 1. Add Gaussian noise to prevent memorising exact lighting/colors
+        noise = torch.randn_like(x) * 0.05
+        x = x + noise
+
+        # 2. Randomly mask out spatial features (first 128 dims) to force pattern focus
+        # We drop the spatial features for 30% of the sequences in the batch
+        batch_size = x.size(0)
+        mask_prob = torch.rand((batch_size, 1, 1), device=x.device)
+        drop_mask = (mask_prob > 0.30).float()
+
+        # Apply drop mask ONLY to the first 128 features (spatial).
+        # The remaining 34 features (motion/pattern) are always kept.
+        x_spatial = x[:, :, :128] * drop_mask
+        x_motion  = x[:, :, 128:]
+
+        return torch.cat([x_spatial, x_motion], dim=2)
 
     def save(self, path: str):
         """Save model state dict to *path*."""

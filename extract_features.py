@@ -32,6 +32,7 @@ from data.dataset_loader import (
     UCSDPedestrianLoader,
     AvenueLoader,
     UCFCrimeLoader,
+    DCSASSLoader,
     iterate_video_frames,
 )
 from data.preprocess import build_cache, extract_features_from_video, create_sliding_windows
@@ -160,6 +161,28 @@ def extract_ucf():
     build_cache(videos, cfg, output_dir, seq_len=cfg.SEQUENCE_LENGTH, stride=15)
 
 
+def extract_dcass():
+    """Extract features from DCSASS indoor dataset."""
+    # Build path to the extracted DCSASS folder
+    root = os.path.join(cfg.DATA_DIR, "dcass dataset", "DCSASS Dataset")
+    loader = DCSASSLoader(root)
+
+    vids = loader.get_all_videos()
+
+    if not vids:
+        logger.error("No DCSASS videos found at: %s", root)
+        return
+
+    videos = []
+    for v in vids:
+        videos.append({"path": v["path"], "label": v["label"]})
+
+    output_dir = os.path.join(cfg.CACHE_DIR, "dcass")
+    logger.info("Processing %d videos for DCSASS...", len(videos))
+    # Stride 10 for better temporal resolution in indoor scenes
+    build_cache(videos, cfg, output_dir, seq_len=cfg.SEQUENCE_LENGTH, stride=10)
+
+
 def extract_from_folder(folder: str, label: int = 0, name: str = "custom"):
     """Extract features from a folder of videos."""
     video_files = sorted(
@@ -225,7 +248,7 @@ def main():
         description="Extract features from surveillance datasets for BiLSTM training."
     )
     parser.add_argument(
-        "--dataset", choices=["ucsd", "avenue", "ucf", "dummy"],
+        "--dataset", choices=["ucsd", "avenue", "ucf", "dcass", "dummy"],
         help="Which dataset to process. Use 'dummy' to generate synthetic test data."
     )
     parser.add_argument("--folder", help="Path to a folder of video files.")
@@ -239,6 +262,8 @@ def main():
         extract_avenue()
     elif args.dataset == "ucf":
         extract_ucf()
+    elif args.dataset == "dcass":
+        extract_dcass()
     elif args.dataset == "dummy":
         generate_dummy_cache()
     elif args.folder:

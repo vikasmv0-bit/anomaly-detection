@@ -183,8 +183,9 @@ body {
 /* ── Streams Grid ───────────────────────────────────────────────────────── */
 .streams-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: var(--gap);
+    grid-auto-flow: dense;
 }
 
 /* Placeholder when no streams */
@@ -219,6 +220,8 @@ body {
     border-color: rgba(239, 68, 68, 0.5);
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
     animation: border-pulse 2s infinite;
+    grid-column: span 2;
+    grid-row: span 2;
 }
 .stream-card.priority-high {
     border-color: rgba(251, 191, 36, 0.4);

@@ -35,7 +35,7 @@ class AnomalyDetector:
         self.cfg     = config
         self.device  = torch.device(device)
         self._buffer = collections.deque(maxlen=config.SEQUENCE_LENGTH)
-        self._score_history = collections.deque(maxlen=5) # Smooth over 5 frames
+        self._score_history = collections.deque(maxlen=15) # Smooth over 15 frames for stability
         self._score  = 0.0
         self._dummy  = (weights_path == "dummy")
 
@@ -112,7 +112,7 @@ class AnomalyDetector:
                 "score": round(prob, 4),
                 "description": description,
                 "timestamp": time.strftime("%H:%M:%S"),
-                "type": "danger" if prob > 0.6 else "warning",
+                "type": "danger" if prob > 0.80 else "warning",
             }
             self._alerts.append(alert)
             logger.warning("[!] ANOMALY frame=%d score=%.3f: %s",
@@ -212,10 +212,12 @@ class AnomalyDetector:
                 parts.append(f"Crowded scene ({len(tracks)} objects)")
 
         if not parts:
-            if score > 0.85:
+            if score > 0.95:
                 parts.append("High anomaly score — critical event detected")
-            else:
+            elif score > 0.90:
                 parts.append("Unusual behavior pattern detected")
+            else:
+                return "Normal activity" # Suppress generic alerts if < 0.90 but still > threshold
 
         return " | ".join(parts)
 

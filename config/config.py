@@ -22,7 +22,7 @@ class Config:
     # YOLOv8 Object Detection
     # -----------------------------------------------------------------------
     YOLO_MODEL          = "yolov8s.pt"   # Upgraded to Small model for better bounding boxes
-    DETECTION_CONF      = 0.20           # Lower for grainy/low-res surveillance cameras
+    DETECTION_CONF      = 0.30           # Increased slightly to ignore noise
     DETECTION_IOU       = 0.45           # NMS IoU threshold
     # COCO class IDs to keep:
     #   0=person, 1=bicycle, 2=car, 3=motorcycle, 5=bus, 7=truck,
@@ -43,8 +43,8 @@ class Config:
     # -----------------------------------------------------------------------
     # Object Tracker
     # -----------------------------------------------------------------------
-    MAX_TRACK_AGE   = 30   # Frames before a track is dropped
-    MIN_TRACK_HITS  = 1    # Frames a track must be confirmed before output (1 = instant)
+    MAX_TRACK_AGE   = 15   # Shorter track age to forget noise quickly
+    MIN_TRACK_HITS  = 2    # Require 2 hits to confirm track to avoid ghost tracks
     IOU_THRESHOLD   = 0.30 # IoU for track-to-detection assignment
 
     # -----------------------------------------------------------------------
@@ -73,7 +73,7 @@ class Config:
     NUM_LAYERS      = 2    # Stacked BiLSTM layers
     DROPOUT         = 0.5  # High Dropout to prevent overfitting
 
-    ANOMALY_THRESHOLD = 0.85  # Increased so indoor webcams don't trigger it constantly
+    ANOMALY_THRESHOLD = 0.92  # Significantly increased so indoor webcams don't trigger falsely
 
     # -----------------------------------------------------------------------
     # Model / Weight Paths

@@ -14,13 +14,13 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-if not exist "venv" (
+if not exist "venv_cuda" (
     echo [INFO] Virtual environment missing. Creating a fresh one...
-    python -m venv venv
+    python -m venv venv_cuda
 )
 
 echo [INFO] Activating environment...
-call venv\Scripts\activate.bat
+call venv_cuda\Scripts\activate.bat
 
 echo [INFO] Ensuring all AI dependencies are installed... (This might take a minute on the first run)
 pip install -r requirements.txt

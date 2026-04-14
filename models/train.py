@@ -36,6 +36,22 @@ from utils.metrics import compute_auc
 
 logger = get_logger("Train")
 
+class BinaryFocalLossWithLogits(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2.0, reduction='mean'):
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        bce_loss = nn.functional.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-bce_loss)
+        f_loss = self.alpha * (1 - pt)**self.gamma * bce_loss
+        
+        if self.reduction == 'mean':
+            return torch.mean(f_loss)
+        else:
+            return torch.sum(f_loss)
 
 def set_seed(seed: int):
     random.seed(seed)
@@ -77,8 +93,8 @@ def train(args):
     n_anomaly = int((all_labels == 1).sum())
     pos_weight_val = compute_pos_weight(all_labels)
 
-    # Cap pos_weight to avoid extreme bias towards anomalies (False Positive prevention)
-    pos_weight_val = min(float(pos_weight_val), 1.5)
+    # Cap pos_weight to heavily bias towards Normal (False Positive prevention)
+    pos_weight_val = min(float(pos_weight_val), 0.8)
 
     logger.info(
         "Class distribution – normal: %d | anomaly: %d | pos_weight (capped): %.2f",
@@ -101,9 +117,9 @@ def train(args):
     ).to(device)
     logger.info("Trainable params: %d", model.parameter_count())
 
-    # Weighted BCE loss – penalises missing anomalies more
-    pos_weight_tensor = torch.tensor([pos_weight_val], device=device)
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight_tensor)
+    # Focal Loss - explicitly penalises hard negatives (false positives)
+    # The higher alpha dynamically sets the general weight, we use gamma=2 to focus on hard mistakes
+    criterion = BinaryFocalLossWithLogits(alpha=pos_weight_val, gamma=2.0)
 
     # Rebuild last layer without sigmoid (BCEWithLogitsLoss does it internally)
     # We'll wrap with a manual sigmoid only during inference
